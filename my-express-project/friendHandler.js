@@ -13,20 +13,42 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+router.post('/addFriend', async (req, res) => {
+    const { email, friendEmail } = req.body;
 
-router.post('/sendFriendRequest', async (req, res) => {
+    try {
+        // Check if both email and friendEmail are provided
+        if (!email || !friendEmail) {
+            return res.status(400).json({ error: 'Both email and friendEmail are required' });
+        }
 
-    const { email, friends = [] } = req.body;
+        // Get user ID from email
+        const [[user]] = await pool.query('SELECT id, friendsList FROM users WHERE email = ?', [email]);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
-    if(email!=null){
-        await pool.query('UPDATE users SET friendsList = ? WHERE email = ?', [JSON.stringify(friends), email]);
-        res.status(201).json({ message: 'Add Friends succesfull' });
+        // Get friend's ID from friendEmail
+        const [[friend]] = await pool.query('SELECT id FROM users WHERE email = ?', [friendEmail]);
+        if (!friend) {
+            return res.status(404).json({ error: 'Friend not found' });
+        }
 
-    }else{
-        return res.status(404).json({ error: 'User not found' });
+        // Parse existing friendsList if not null
+        let updatedFriendsList = user.friendsList ? JSON.parse(user.friendsList) : [];
+        
+        // Add friend's ID to the list of friends
+        updatedFriendsList.push(friend.id);
+
+        // Update user's friend list with the updated friendsList
+        await pool.query('UPDATE users SET friendsList = ? WHERE email = ?', [JSON.stringify(updatedFriendsList), email]);
+
+        res.status(200).json({ message: 'Friend added successfully' });
+    } catch (error) {
+        console.error('Error adding friend:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-})
+});
 
 router.get('/', async (req, res) => {
 
