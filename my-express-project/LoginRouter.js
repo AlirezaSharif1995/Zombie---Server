@@ -33,13 +33,11 @@ router.post('/', async (req, res) => {
             return res.status(401).json({ error: 'Incorrect password' });
         }
 
-        // User authenticated successfully, return user information
         const user = {
             id: existingUser[0].id,
             username: existingUser[0].username,
             email: existingUser[0].email,
             password: password,
-            // Add any other user information you want to return
         };
 
         res.status(200).json({ message: 'Login successful', user });
