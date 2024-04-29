@@ -190,4 +190,24 @@ router.get('/playerInfo',async(req,res)=>{
     res.status(200).json({ message: 'user found: ',user});
 });
 
+router.post('/removeUser',async(req,res)=>{
+
+    const {userID,friendID} = req.body;
+    const user = await getUserByID(userID);
+
+    try{
+    const updatedReceivedRequests = user.friendsList ? JSON.parse(user.friendsList) : [];
+    const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
+    await pool.query('UPDATE users SET friendsList = ? WHERE email = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), user.email]);
+
+    res.status(200).json({ message: 'Friend removed successfully' });
+    
+    }catch (error) {
+        console.error('Error remove friend:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+
+    
+});
+
 module.exports = router;
