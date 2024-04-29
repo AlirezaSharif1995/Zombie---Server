@@ -13,11 +13,45 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// Helper function to get user by id
+async function getUserByID(friendID) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [friendID]);
+    return rows[0];
+}
+
 // Helper function to get user by email
 async function getUserByEmail(email) {
     const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     return rows[0];
 }
+
+// Get user endpoint
+router.get('/', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const user = await getUserByEmail(email);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userData = {
+            id: user.id,
+            email: user.email,
+            recivedRequests: user.recivedRequests,
+            friendsList: user.friendsList
+        };
+
+        res.status(200).json({ message: 'Data sent successfully', user: userData });
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // Add friend endpoint
 router.post('/addFriend', async (req, res) => {
@@ -55,6 +89,11 @@ router.post('/addFriend', async (req, res) => {
         // Update user's friend list with the updated friendsList
         await pool.query('UPDATE users SET friendsList = ? WHERE email = ?', [JSON.stringify(updatedFriendsList), email]);
 
+        const updatedReceivedRequests = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
+        const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
+        await pool.query('UPDATE users SET recivedRequests = ? WHERE email = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), email]);
+
+
         res.status(200).json({ message: 'Friend added successfully' });
     } catch (error) {
         console.error('Error adding friend:', error);
@@ -62,38 +101,11 @@ router.post('/addFriend', async (req, res) => {
     }
 });
 
-// Get user endpoint
-router.get('/', async (req, res) => {
-    const { email } = req.body;
-
-    try {
-        if (!email) {
-            return res.status(400).json({ error: 'Email is required' });
-        }
-
-        const user = await getUserByEmail(email);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        const userData = {
-            email: user.email,
-            recivedRequests: user.recivedRequests,
-            friendsList: user.friendsList
-        };
-
-        res.status(200).json({ message: 'Data sent successfully', user: userData });
-    } catch (error) {
-        console.error('Error fetching user:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// request endpoint
-router.post('/sendRequest',async(req,res)=>{
+// Reject friend endpoint
+router.post('/rejectFriend', async (req, res) => {
     const { email, friendID } = req.body;
 
- try {
+    try {
         // Check if both email and friendID are provided
         if (!email || !friendID) {
             return res.status(400).json({ error: 'Both email and friendID are required' });
@@ -110,20 +122,53 @@ router.post('/sendRequest',async(req,res)=>{
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+        
+        const updatedReceivedRequests = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
+        const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
+        await pool.query('UPDATE users SET recivedRequests = ? WHERE email = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), email]);
+
+        res.status(200).json({ message: 'Friend removed successfully' });
+    } catch (error) {
+        console.error('Error adding friend:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// request endpoint
+router.post('/sendRequest',async(req,res)=>{
+    const { email, friendID } = req.body;
+
+ try {
+        // Check if both email and friendID are provided
+        if (!email || !friendID) {
+            return res.status(400).json({ error: 'Both email and friendID are required' });
+        }
+
+        // Check if the friend ID exists in the database
+        const [[userEmailId]] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+        if (!userEmailId) {
+            return res.status(404).json({ error: 'Friend not found' });
+        }
+
+        // Get user by email
+        const user = await getUserByID(friendID);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
         // Parse existing recivedRequests if not null
         const updatedFriendsRequest = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
 
         // Check if the friendID already exists in the updatedFriendsRequest
-        if (!updatedFriendsRequest.includes(friendID)) {
+        if (!updatedFriendsRequest.includes(userEmailId.id)) {
             // Add friend's ID to the list of friends only if it's not already present
-            updatedFriendsRequest.push(friendID);
+            updatedFriendsRequest.push(userEmailId.id);
         } else {
             return res.status(400).json({ error: 'Friend request already sent' });
         }
 
         // Update user's friend list with the updated friendsList
-        await pool.query('UPDATE users SET recivedRequests = ? WHERE email = ?', [JSON.stringify(updatedFriendsRequest), email]);
+        await pool.query('UPDATE users SET recivedRequests = ? WHERE email = ?', [JSON.stringify(updatedFriendsRequest), user.email]);
 
         res.status(200).json({ message: 'Friend request sent successfully' });
     } catch (error) {
