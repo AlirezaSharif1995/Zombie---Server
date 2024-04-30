@@ -32,8 +32,7 @@ io.on('connection', (socket) => {
   
   // Listen for "userConnected" event
   socket.on('userConnected', (username) => {
-    console.log(username)
-    connectedUsers[socket.id] = username;
+    connectedUsers[socket.username] = username;
     io.emit('userJoined', `${username} joined the chat`);
   });
 
