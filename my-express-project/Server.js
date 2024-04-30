@@ -39,7 +39,7 @@ io.on('connection', (socket) => {
 
   // Listen for chat messages
   socket.on('chatMessage', (message) => {
-    const username = connectedUsers[socket.id];
+    const username = connectedUsers[socket.username];
     io.emit('message', `${username}: ${message}`);
   });
   
