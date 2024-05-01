@@ -5,6 +5,7 @@ const loginRouter = require('./LoginRouter');
 const friendHandler = require('./friendHandler');
 const http = require('http'); // Import http module
 const socketIo = require('socket.io');
+const { debug } = require('console');
 
 const app = express();
 const PORT = 3030;
@@ -33,28 +34,35 @@ io.on('connection', (socket) => {
 
   
   // Listen for "userConnected" event
-  socket.on('userConnected', (username) => {
-    console.log(username);
-    connectedUsers[socket.username] = username;
-    io.emit('userJoined', `${username} joined the chat`);
+  socket.on('userConnected', (id) => {
+    console.log(id +" joined the chat");
+    connectedUsers[id] = socket.id;
+    io.emit('userJoined', `${id} joined the chat`);
   });
 
-  socket.on('privateMessage', async ({ sender, receiver, message }) => {
+  socket.on('privateMessage', async ( sender, receiver, message ) => {
 
     try {
         // Save the message to the database
         //const newMessage = new Message({ sender, receiver, message });
         //await newMessage.save();
+        
+        // Check if thce receiver is connected
+      if (connectedUsers[receiver]) {
+        // Emit the private message to the receiver
+        console.log(` ${sender} to ${receiver} : ${message}`);
+        io.to(connectedUsers[receiver]).emit('privateMessage', `${sender} : ${message}` );
 
-        // Check if the receiver is connected
-        if (connectedUsers[receiver]) {
-            // Emit the private message to the receiver
-            io.to(connectedUsers[receiver]).emit('privateMessage', { sender, message });
-        }
+      } else {
+        console.log('Receiver is not online');
+        // Handle the case where the receiver is not online
+        // You can emit an event or do any other necessary action here
+      }
+
     } catch (error) {
         console.error('Error saving message:', error);
     }
-    
+
 });
 
   // Listen for chat messages
