@@ -75,19 +75,26 @@ router.post('/addFriend', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        const friendList = await getUserByID(friendID);
+
+
         // Parse existing friendsList if not null
         const updatedFriendsList = user.friendsList ? JSON.parse(user.friendsList) : [];
+        const updateUserList = friendList.friendList ? JSON.parse(friendList.friendsList) : [];
 
         // Check if the friendID already exists in the updatedFriendsList
         if (!updatedFriendsList.includes(friendID)) {
             // Add friend's ID to the list of friends only if it's not already present
             updatedFriendsList.push(friendID);
+            updateUserList.push(user.id);
+
         } else {
             return res.status(400).json({ error: 'Friend already exists in the list' });
         }
 
         // Update user's friend list with the updated friendsList
         await pool.query('UPDATE users SET friendsList = ? WHERE email = ?', [JSON.stringify(updatedFriendsList), email]);
+        await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updateUserList),friendID]);
 
         const updatedReceivedRequests = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
         const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
@@ -178,10 +185,10 @@ router.post('/sendRequest',async(req,res)=>{
 });
 
 router.get('/playerInfo',async(req,res)=>{
-    
+
     const {id} = req.body;
-    const [existingUser] = await pool.query('SELECT username FROM users WHERE id = ?', [id])
-  
+    const [existingUser] = await pool.query('SELECT username FROM users WHERE id = ?', [id]);
+
     const user = {
         id: id,
         username: existingUser[0].username
