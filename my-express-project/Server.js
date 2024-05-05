@@ -6,7 +6,7 @@ const friendHandler = require('./friends/friendHandler');
 const friendsChat = require('./friends/friendsChat');
 const http = require('http');
 const socketIo = require('socket.io');
-const { setupChatSocket, setupPrivateMessageSocket } = require('./sockets');
+const { setupChatSocket, setupPrivateMessageSocket, voiceChatSocket } = require('./sockets');
 
 const app = express();
 const PORT = 3030;
@@ -28,6 +28,7 @@ const io = socketIo(server);
 
 setupChatSocket(io);
 setupPrivateMessageSocket(io);
+voiceChatSocket(io);
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
