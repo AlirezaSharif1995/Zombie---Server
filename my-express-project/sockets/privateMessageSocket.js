@@ -1,3 +1,14 @@
+const mysql = require('mysql2/promise');
+const pool = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: 'Alireza1995!',
+    database: 'zombie-City-database',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
 module.exports = function(io) {
     const connectedUsers = {};
   
@@ -11,7 +22,10 @@ module.exports = function(io) {
   
       socket.on('privateMessage', async (sender, receiver, message) => {
         try {
+            await pool.query('INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?)', [sender, receiver, message]);
+
           if (connectedUsers[receiver]) {
+
             console.log(`${sender} to ${receiver} : ${message}`);
             io.to(connectedUsers[receiver]).emit('privateMessage', `${sender} : ${message}`);
           } else {
