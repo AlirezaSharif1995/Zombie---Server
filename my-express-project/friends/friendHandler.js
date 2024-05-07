@@ -27,14 +27,10 @@ async function getUserByEmail(email) {
 
 // Get user endpoint
 router.get('/', async (req, res) => {
-    const { email } = req.body;
+    const { token } = req.body;
 
     try {
-        if (!email) {
-            return res.status(400).json({ error: 'Email is required' });
-        }
-
-        const user = await getUserByEmail(email);
+        const user = await getUserByID(token);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -55,22 +51,13 @@ router.get('/', async (req, res) => {
 
 // Add friend endpoint
 router.post('/addFriend', async (req, res) => {
-    const { email, friendID } = req.body;
+    const { token, friendID } = req.body;
 
     try {
-        // Check if both email and friendID are provided
-        if (!email || !friendID) {
-            return res.status(400).json({ error: 'Both email and friendID are required' });
-        }
 
-        // Check if the friend ID exists in the database
-        const [[friend]] = await pool.query('SELECT * FROM users WHERE id = ?', [friendID]);
-        if (!friend) {
-            return res.status(404).json({ error: 'Friend not found' });
-        }
 
         // Get user by email
-        const user = await getUserByEmail(email);
+        const user = await getUserByID(token);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -93,12 +80,12 @@ router.post('/addFriend', async (req, res) => {
         }
 
         // Update user's friend list with the updated friendsList
-        await pool.query('UPDATE users SET friendsList = ? WHERE email = ?', [JSON.stringify(updatedFriendsList), email]);
+        await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updatedFriendsList), token]);
         await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updateUserList),friendID]);
 
         const updatedReceivedRequests = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
         const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
-        await pool.query('UPDATE users SET recivedRequests = ? WHERE email = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), email]);
+        await pool.query('UPDATE users SET recivedRequests = ? WHERE id = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), token]);
 
 
         res.status(200).json({ message: 'Friend added successfully' });
@@ -110,13 +97,9 @@ router.post('/addFriend', async (req, res) => {
 
 // Reject friend endpoint
 router.post('/rejectFriend', async (req, res) => {
-    const { email, friendID } = req.body;
+    const { token, friendID } = req.body;
 
     try {
-        // Check if both email and friendID are provided
-        if (!email || !friendID) {
-            return res.status(400).json({ error: 'Both email and friendID are required' });
-        }
 
         // Check if the friend ID exists in the database
         const [[friend]] = await pool.query('SELECT * FROM users WHERE id = ?', [friendID]);
@@ -125,14 +108,14 @@ router.post('/rejectFriend', async (req, res) => {
         }
 
         // Get user by email
-        const user = await getUserByEmail(email);
+        const user = await getUserByID(token);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
         
         const updatedReceivedRequests = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
         const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
-        await pool.query('UPDATE users SET recivedRequests = ? WHERE email = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), email]);
+        await pool.query('UPDATE users SET recivedRequests = ? WHERE id = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), token]);
 
         res.status(200).json({ message: 'Friend removed successfully' });
     } catch (error) {
@@ -143,16 +126,12 @@ router.post('/rejectFriend', async (req, res) => {
 
 // request endpoint
 router.post('/sendRequest',async(req,res)=>{
-    const { email, friendID } = req.body;
+    const { token, friendID } = req.body;
 
  try {
-        // Check if both email and friendID are provided
-        if (!email || !friendID) {
-            return res.status(400).json({ error: 'Both email and friendID are required' });
-        }
 
         // Check if the friend ID exists in the database
-        const [[userEmailId]] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+        const [[userEmailId]] = await pool.query('SELECT id FROM users WHERE id = ?', [token]);
         if (!userEmailId) {
             return res.status(404).json({ error: 'Friend not found' });
         }
@@ -175,7 +154,7 @@ router.post('/sendRequest',async(req,res)=>{
         }
 
         // Update user's friend list with the updated friendsList
-        await pool.query('UPDATE users SET recivedRequests = ? WHERE email = ?', [JSON.stringify(updatedFriendsRequest), user.email]);
+        await pool.query('UPDATE users SET recivedRequests = ? WHERE id = ?', [JSON.stringify(updatedFriendsRequest), user.id]);
 
         res.status(200).json({ message: 'Friend request sent successfully' });
     } catch (error) {
@@ -199,13 +178,13 @@ router.get('/playerInfo',async(req,res)=>{
 
 router.post('/removeUser',async(req,res)=>{
 
-    const {userID,friendID} = req.body;
-    const user = await getUserByID(userID);
+    const {token,friendID} = req.body;
+    const user = await getUserByID(token);
 
     try{
     const updatedReceivedRequests = user.friendsList ? JSON.parse(user.friendsList) : [];
     const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
-    await pool.query('UPDATE users SET friendsList = ? WHERE email = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), user.email]);
+    await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), user.id]);
 
     res.status(200).json({ message: 'Friend removed successfully' });
     
