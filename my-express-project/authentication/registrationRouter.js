@@ -53,9 +53,16 @@ router.post('/enter-username', async (req, res) => {
     try {
         // Update user document with the username
         await pool.query('UPDATE users SET username = ? WHERE email = ?', [username, email]);
-        
-        // If you want to send a response back to the client, you can do it here
-        res.send('Username saved successfully!');
+
+        const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      
+        const user = {
+            id: existingUser[0].id,
+            username: existingUser[0].username,
+            email: existingUser[0].email
+                };
+
+        res.status(200).json({ message: 'username saved!', user });
     } catch (error) {
         console.error('Error saving username:', error);
         res.status(500).json({ error: 'Error saving username' });
