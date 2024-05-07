@@ -130,7 +130,7 @@ router.post('/sendRequest',async(req,res)=>{
  try {
 
     const firstuser = await getUserByID(token);
-    if (!user) {
+    if (!firstuser) {
         return res.status(404).json({ error: 'User not found' });
     }
         const user = await getUserByID(friendID);
