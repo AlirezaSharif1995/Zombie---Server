@@ -129,6 +129,10 @@ router.post('/sendRequest',async(req,res)=>{
 
  try {
 
+    const firstuser = await getUserByID(token);
+    if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+    }
         const user = await getUserByID(friendID);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -136,8 +140,8 @@ router.post('/sendRequest',async(req,res)=>{
 
         const updatedFriendsRequest = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
 
-        if (!updatedFriendsRequest.includes(token)) {
-            updatedFriendsRequest.push(token);
+        if (!updatedFriendsRequest.includes(firstuser.id)) {
+            updatedFriendsRequest.push(firstuser.id);
         } else {
             return res.status(400).json({ error: 'Friend request already sent' });
         }
