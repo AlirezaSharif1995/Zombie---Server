@@ -14,8 +14,8 @@ const pool = mysql.createPool({
 });
 
 // Helper function to get user by id
-async function getUserByID(friendID) {
-    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [friendID]);
+async function getUserByID(token) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [token]);
     return rows[0];
 }
 
@@ -55,19 +55,19 @@ router.post('/addFriend', async (req, res) => {
 
     try {
 
-
-        // Get user by email
         const user = await getUserByID(token);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const friendList = await getUserByID(friendID);
-
+        const friend = await getUserByID(friendID);
+        if (!friend) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
         // Parse existing friendsList if not null
         const updatedFriendsList = user.friendsList ? JSON.parse(user.friendsList) : [];
-        const updateUserList = friendList.friendList ? JSON.parse(friendList.friendsList) : [];
+        const updateUserList = friend.friendList ? JSON.parse(friend.friendsList) : [];
 
         // Check if the friendID already exists in the updatedFriendsList
         if (!updatedFriendsList.includes(friendID)) {
@@ -107,7 +107,6 @@ router.post('/rejectFriend', async (req, res) => {
             return res.status(404).json({ error: 'Friend not found' });
         }
 
-        // Get user by email
         const user = await getUserByID(token);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -130,30 +129,19 @@ router.post('/sendRequest',async(req,res)=>{
 
  try {
 
-        // Check if the friend ID exists in the database
-        const [[userEmailId]] = await pool.query('SELECT id FROM users WHERE id = ?', [token]);
-        if (!userEmailId) {
-            return res.status(404).json({ error: 'Friend not found' });
-        }
-
-        // Get user by email
         const user = await getUserByID(friendID);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Parse existing recivedRequests if not null
         const updatedFriendsRequest = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
 
-        // Check if the friendID already exists in the updatedFriendsRequest
-        if (!updatedFriendsRequest.includes(userEmailId.id)) {
-            // Add friend's ID to the list of friends only if it's not already present
-            updatedFriendsRequest.push(userEmailId.id);
+        if (!updatedFriendsRequest.includes(token)) {
+            updatedFriendsRequest.push(token);
         } else {
             return res.status(400).json({ error: 'Friend request already sent' });
         }
 
-        // Update user's friend list with the updated friendsList
         await pool.query('UPDATE users SET recivedRequests = ? WHERE id = ?', [JSON.stringify(updatedFriendsRequest), user.id]);
 
         res.status(200).json({ message: 'Friend request sent successfully' });

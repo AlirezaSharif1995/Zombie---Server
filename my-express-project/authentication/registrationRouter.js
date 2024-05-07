@@ -15,7 +15,7 @@ const pool = mysql.createPool({
 });
 
 router.post('/', async (req, res) => {
-    const { username, email, password, location } = req.body;
+    const { email, password, location } = req.body;
 
     if (!isValidEmail(email)) {
         return res.status(400).json({ error: 'Invalid email format' });
@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert new user into the database
-        await pool.query('INSERT INTO users (username, email, password_hash, location) VALUES (?, ?, ?, ?)', [username, email, hashedPassword, location]);
+        await pool.query('INSERT INTO users (email, password_hash, location) VALUES (?, ?, ?)', [email, hashedPassword, location]);
 
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
@@ -57,10 +57,8 @@ router.post('/enter-username', async (req, res) => {
         const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
       
         const user = {
-            id: existingUser[0].id,
-            username: existingUser[0].username,
-            email: existingUser[0].email
-                };
+            id: existingUser[0].id
+            };
 
         res.status(200).json({ message: 'username saved!', user });
     } catch (error) {
