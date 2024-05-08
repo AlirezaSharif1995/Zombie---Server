@@ -1,7 +1,7 @@
 let gameState = {
     players: {},
     zombies: {}
-};
+}
 
 const zones = {
     zone1: {
@@ -13,7 +13,7 @@ const zones = {
     zone3: {
         zombies: [],
     }
-};
+}
 
 
 function handlePlayer(data, socket) {
@@ -96,7 +96,6 @@ module.exports = function(io) {
         io.playerId = playerId;
 
         console.log('New player connected:', playerId);
-
     
         io.on('message', (message) => {
             handleMessage(message,io);
@@ -114,7 +113,6 @@ function emitCurrentGameState(playerSocket) {
 
     const gameStateData = {
         players: gameState.players,
-        zombies: gameState.zombies
     };
 
     playerSocket.emit('currentGameState', gameStateData);
