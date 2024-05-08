@@ -10,10 +10,12 @@ const pool = mysql.createPool({
 });
 
 module.exports = function(io) {
+  
     const connectedUsers = {};
   
     io.on('connection', (socket) => {
-  
+      console.log('123');
+
       socket.on('userConnected', (id) => {
         console.log(`${id} joined the chat`);
         connectedUsers[id] = socket.id;
@@ -27,7 +29,9 @@ module.exports = function(io) {
           if (connectedUsers[receiver]) {
 
             console.log(`${sender} to ${receiver} : ${message}`);
+
             io.to(connectedUsers[receiver]).emit('privateMessage', `${sender} : ${message}`);
+
           } else {
             console.log('Receiver is not online');
           }
