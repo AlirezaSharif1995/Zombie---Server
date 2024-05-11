@@ -14,7 +14,6 @@ module.exports = function(io) {
     const connectedUsers = {};
   
     io.on('connection', (socket) => {
-      console.log('123');
 
       socket.on('userConnected', (id) => {
         console.log(`${id} joined the chat`);

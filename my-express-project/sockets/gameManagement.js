@@ -29,13 +29,11 @@ function handlePlayer(data, socket) {
     } else {
         
         gameState.players[playerId] = {
-            id: id,
             position: data.position,
             rotation: data.rotation,
-            activeAnimation: data.animationCode,
+            animationCode: data.animationCode,
             health: data.health,
         };
-
          }
 
         emitEventToAllExcept(socket, 'playerMoved', {
@@ -84,28 +82,29 @@ function handleMessage(message, socket) {
     }
 }
 
-function generatePlayerId() {
-
-    return 'player_' + Math.random().toString(36).substr(2, 9);
-}
-
 module.exports = function(io) {
-    io.on('startGame',()=>{
+   
 
-        const playerId = generatePlayerId();
-        io.playerId = playerId;
+io.on('connection', (socket) => {
 
-        console.log('New player connected:', playerId);
+    console.log(` joined the chat`);
+  
+    socket.on('startGame',(username)=>{
+  
+      const playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+      socket.playerId = playerId;
+      console.log('New player connected:', playerId);
+      socket.emit('playerJoined',username);
+    });
     
-        io.on('message', (message) => {
-            handleMessage(message,io);
-        });
+    socket.on('message', async (obj) => {
+          handleMessage(obj,socket);
+      });
     
-        io.on('close', () => {
-            console.log('Player disconnected:', playerId);
-            delete gameState.players[playerId];
-        });
-
+    socket.on('close', () => {
+          console.log('Player disconnected:', playerId);
+          delete gameState.players[playerId];
+      });
     });
 }
 
@@ -120,7 +119,7 @@ function emitCurrentGameState(playerSocket) {
 
 function emitEventToAllExcept(senderSocket, eventName, eventData) {
     
-    io.clients.forEach((client) => {
+    senderSocket.clients.forEach((client) => {
         if (client !== senderSocket) {
             client.emit(eventName, eventData);
         }
