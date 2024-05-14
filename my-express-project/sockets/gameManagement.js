@@ -1,5 +1,3 @@
-const connectedSockets = new Set();
-
 let gameState = {
     players: {},
     zombies: {}
@@ -18,7 +16,7 @@ const zones = {
 }
 
 
-function handlePlayer(data, socket) {
+function handlePlayer(data, socket, io) {
 
     const { playerId } = data;
 
@@ -47,7 +45,7 @@ function handlePlayer(data, socket) {
             health: data.health,
         };
     }
-    emitEventToAllExcept(socket, 'playerMoved', {
+    emitEventToAllExcept('playerMoved', {
         username: data.username,
         posX: data.posX,
         posY: data.posY,
@@ -57,7 +55,7 @@ function handlePlayer(data, socket) {
         rotZ: data.rotZ,
         animationCode: data.animationCode,
         health: data.health
-    });
+    }, io);
 }
 
 function handlePlayerShooting(data, socket) {
@@ -74,7 +72,7 @@ function handleZombieUpdate(zoneName, socket) {
     socket.emit('zoneZombieUpdates', zoneZombies);
 }
 
-function handleMessage(message, socket) {
+function handleMessage(message, socket, io) {
     try {
         // const data = JSON.parse(message);
         const data = (message);
@@ -82,7 +80,7 @@ function handleMessage(message, socket) {
 
         switch (messageType) {
             case 'playerMove':
-                handlePlayer(data, socket);
+                handlePlayer(data, socket, io);
                 break;
             case 'zombieUpdate':
                 handleZombieUpdate(data, socket);
@@ -100,20 +98,17 @@ function handleMessage(message, socket) {
 
 module.exports = function (io) {
 
-
     io.on('connection', (socket) => {
-
-        connectedSockets.add(socket);
 
         socket.on('startGame', (Entry) => {
             const playerId = 'player_' + Math.random().toString(36).substr(2, 9);
             socket.playerId = playerId;
             console.log('New player connected:', playerId);
-            socket.emit('playerJoined', Entry);
+            io.emit('playerJoined', Entry);
         });
 
         socket.on('message', (obj) => {
-            handleMessage(obj, socket);
+            handleMessage(obj, socket, io);
         });
 
         socket.on('close', () => {
@@ -133,13 +128,11 @@ function emitCurrentGameState(playerSocket) {
     playerSocket.emit('currentGameState', gameStateData);
 }
 
-function emitEventToAllExcept(senderSocket, eventName, eventData) {
+function emitEventToAllExcept(eventName, eventData, io) {
 
-    senderSocket.emit(eventName, eventData);
-
-    // connectedSockets.forEach((client) => {
-    //     if (client !== senderSocket) {
-    //         client.emit(eventName, eventData);
+    // connectedSockets.forEach(socket => {
+    //     if (socket !== senderSocket) {
+            io.emit(eventName, eventData);
     //     }
     // });
 
