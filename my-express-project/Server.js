@@ -6,7 +6,8 @@ const friendHandler = require('./friends/friendHandler');
 const friendsChat = require('./friends/friendsChat');
 const http = require('http');
 const socketIo = require('socket.io');
-const { setupChatSocket, setupPrivateMessageSocket, voiceChatSocket, gameManagement } = require('./sockets');
+const { setupChatSocket, setupPrivateMessageSocket, voiceChatSocket, gameManagement } = require('./MessageManager');
+const socketGateway = require('./sockets/socketGateway');
 
 const app = express();
 const PORT = 3030;
@@ -17,6 +18,7 @@ app.use('/api/auth/register', registrationRouter);
 app.use('/api/auth/login', loginRouter);
 app.use('/api/friendHandler', friendHandler);
 app.use('/friends/friendsChat', friendsChat);
+app.use('/socketGateway', socketGateway);
 
 
 app.get('/test', (req, res) => {

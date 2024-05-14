@@ -1,4 +1,5 @@
 const bodyParser = require('body-parser');
+const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 
@@ -15,18 +16,6 @@ const connectedSockets = new Set();
 let gameState = {
     players: {},
     zombies: {}
-}
-
-const zones = {
-    zone1: {
-        zombies: [],
-    },
-    zone2: {
-        zombies: [],
-    },
-    zone3: {
-        zombies: [],
-    }
 }
 
 function handlePlayer(data, socket) {
@@ -76,13 +65,7 @@ function handlePlayerShooting(data, socket) {
 }
 
 function handleZombieUpdate(zoneName, socket) {
-    const zone = zones[zoneName];
-    const zoneZombies = zone.zombies.map(zombie => ({
-        position: zombie.position,
-        rotation: zombie.rotation,
-        animationCode: zombie.animationCode
-    }));
-    socket.emit('zoneZombieUpdates', zoneZombies);
+    
 }
 
 function handleMessage(message, socket) {
@@ -147,15 +130,8 @@ function emitCurrentGameState(playerSocket) {
 function emitEventToAllExcept(senderSocket, eventName, eventData) {
 
     senderSocket.emit(eventName, eventData);
-
-    // connectedSockets.forEach((client) => {
-    //     if (client !== senderSocket) {
-    //         client.emit(eventName, eventData);
-    //     }
-    // });
-
 }
 
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`tehranRoom1 is running on port ${PORT}`);
   });
