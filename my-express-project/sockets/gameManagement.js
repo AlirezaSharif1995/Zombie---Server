@@ -1,18 +1,7 @@
+
 let gameState = {
     players: {},
     zombies: {}
-}
-
-const zones = {
-    zone1: {
-        zombies: [],
-    },
-    zone2: {
-        zombies: [],
-    },
-    zone3: {
-        zombies: [],
-    }
 }
 
 
@@ -25,9 +14,7 @@ function handlePlayer(data, socket, io) {
         gameState.players[playerId].posX = data.posX;
         gameState.players[playerId].posY = data.posY;
         gameState.players[playerId].posZ = data.posZ;
-        gameState.players[playerId].rotX = data.rotX;
         gameState.players[playerId].rotY = data.rotY;
-        gameState.players[playerId].rotZ = data.rotZ;
         gameState.players[playerId].animationCode = data.animationCode;
         gameState.players[playerId].health = data.health;
 
@@ -35,12 +22,11 @@ function handlePlayer(data, socket, io) {
 
         gameState.players[playerId] = {
             username: data.username,
+            characterID: data.characterID,
             posX: data.posX,
             posY: data.posY,
             posZ: data.posZ,
-            rotX: data.rotX,
             rotY: data.rotY,
-            rotZ: data.rotZ,
             animationCode: data.animationCode,
             health: data.health,
         };
@@ -62,19 +48,39 @@ function handlePlayerShooting(data, socket) {
 
 }
 
-function handleZombieUpdate(zoneName, socket) {
-    const zone = zones[zoneName];
-    const zoneZombies = zone.zombies.map(zombie => ({
-        position: zombie.position,
-        rotation: zombie.rotation,
-        animationCode: zombie.animationCode
-    }));
-    socket.emit('zoneZombieUpdates', zoneZombies);
+function handleZombieUpdate(data, socket, io) {
+
+    const { ZombieId } = data;
+
+    if (gameState.zombies[ZombieId]) {
+
+        gameState.zombies[ZombieId].serverID = data.serverID;
+        gameState.zombies[ZombieId].posX = data.posX;
+        gameState.zombies[ZombieId].posY = data.posY;
+        gameState.zombies[ZombieId].posZ = data.posZ;
+        gameState.zombies[ZombieId].rotY = data.rotY;
+        gameState.zombies[ZombieId].animationCode1 = data.animationCode1;
+        gameState.zombies[ZombieId].animationCode2 = data.animationCode2;
+        gameState.zombies[ZombieId].health = data.health;
+
+    } else {
+
+        gameState.zombies[ZombieId] = {
+            serverID: data.serverID,
+            posX: data.posX,
+            posY: data.posY,
+            posZ: data.posZ,
+            rotY: data.rotY,
+            animationCode1: data.animationCode1,
+            animationCode2: data.animationCode2,
+            health: data.health,
+        };
+    }
+    socket.broadcast.emit('zombieUpdate', gameState.zombies[ZombieId]);
 }
 
 function handleMessage(message, socket, io) {
     try {
-        // const data = JSON.parse(message);
         const data = (message);
         const messageType = data.type;
 
@@ -83,7 +89,13 @@ function handleMessage(message, socket, io) {
                 handlePlayer(data, socket, io);
                 break;
             case 'zombieUpdate':
-                handleZombieUpdate(data, socket);
+                handleZombieUpdate(data, socket, io);
+                break;
+            case 'freeZombie':
+                io.emit('freeZombie', data);
+                break;
+            case 'spawnZombie':
+                handleZombieUpdate(data, socket, io)
                 break;
             case 'playerShooting':
                 handlePlayerShooting(data, socket);
@@ -105,35 +117,53 @@ module.exports = function (io) {
             socket.playerId = playerId;
             console.log('New player connected:', playerId);
             io.emit('playerJoined', Entry);
+            emitCurrentGameState(socket);
+            console.log(gameState.zombies)
         });
 
         socket.on('message', (obj) => {
             handleMessage(obj, socket, io);
         });
 
-        socket.on('close', () => {
-            console.log('Player disconnected:', playerId);
-            connectedSockets.delete(socket);
-            delete gameState.players[playerId];
+        socket.on('disconnect', () => {
+
+            const playerUsernames = Object.values(gameState.players).map(player => player.username);
+
+            for (const playerId in gameState.players) {
+
+                if (playerUsernames.includes(gameState.players[playerId].username)) {
+                    delete gameState.players[playerId];
+                    console.log('Player with username disconnected');
+                    console.log(gameState.players)
+                    emitCurrentGameState(io);
+                    break;
+                }
+            }
+
         });
     });
 }
 
 function emitCurrentGameState(playerSocket) {
 
+    if (Object.keys(gameState.players).length === 0) {
+        return;
+    }
+
+    const playerUsernames = Object.values(gameState.players).map(player => player.username);
+    const playerCharacterID = Object.values(gameState.players).map(player => player.characterID);
+
     const gameStateData = {
-        players: gameState.players,
+        players: playerUsernames,
+        characterID: playerCharacterID
     };
+    console.log(gameStateData);
 
     playerSocket.emit('currentGameState', gameStateData);
 }
 
+
 function emitEventToAllExcept(eventName, eventData, io) {
 
-    // connectedSockets.forEach(socket => {
-    //     if (socket !== senderSocket) {
-            io.emit(eventName, eventData);
-    //     }
-    // });
-
+    io.emit(eventName, eventData);
 }
