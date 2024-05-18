@@ -29,9 +29,9 @@ app.get('/test', (req, res) => {
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// setupChatSocket(io);
-// setupPrivateMessageSocket(io);
-// voiceChatSocket(io);
+setupChatSocket(io);
+setupPrivateMessageSocket(io);
+voiceChatSocket(io);
 testSocket(io);
 
 server.listen(PORT, () => {

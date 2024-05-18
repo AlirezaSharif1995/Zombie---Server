@@ -51,10 +51,15 @@ router.post('/enter-username', async (req, res) => {
     const { email, username } = req.body;
 
     try {
-        // Update user document with the username
+
+        const [existingUser] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+        
+        if (existingUser.length > 0) {
+            return res.status(400).json({ error: 'Username is already registered' });
+        }
+
         await pool.query('UPDATE users SET username = ? WHERE email = ?', [username, email]);
 
-        const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
       
         const user = {
             id: existingUser[0].id

@@ -5,7 +5,7 @@ let gameState = {
 }
 
 
-function handlePlayer(data, socket, io) {
+function handlePlayer(data, socket) {
 
     const { playerId } = data;
 
@@ -15,12 +15,14 @@ function handlePlayer(data, socket, io) {
         gameState.players[playerId].posY = data.posY;
         gameState.players[playerId].posZ = data.posZ;
         gameState.players[playerId].rotY = data.rotY;
+        gameState.players[playerId].weaponCode = data.weaponCode;
         gameState.players[playerId].animationCode = data.animationCode;
         gameState.players[playerId].health = data.health;
 
     } else {
 
         gameState.players[playerId] = {
+            weaponCode: data.weaponCode,
             username: data.username,
             characterID: data.characterID,
             posX: data.posX,
@@ -31,7 +33,8 @@ function handlePlayer(data, socket, io) {
             health: data.health,
         };
     }
-    emitEventToAllExcept('playerMoved', {
+
+    socket.broadcast.emit('playerMoved', {
         username: data.username,
         posX: data.posX,
         posY: data.posY,
@@ -39,12 +42,13 @@ function handlePlayer(data, socket, io) {
         rotX: data.rotX,
         rotY: data.rotY,
         rotZ: data.rotZ,
+        weaponCode: data.weaponCode,
         animationCode: data.animationCode,
         health: data.health
-    }, io);
+    });
 }
 
-function handleZombieUpdate(data, socket, io) {
+function handleZombieUpdate(data, socket) {
 
     const { ZombieId } = data;
 
@@ -70,16 +74,22 @@ function handleMessage(message, socket, io) {
 
         switch (messageType) {
             case 'playerMove':
-                handlePlayer(data, socket, io);
+                handlePlayer(data, socket);
                 break;
             case 'setZombieTarget':
-                handleZombieUpdate(data, socket, io);
+                handleZombieUpdate(data, socket);
                 break;
             case 'zombieHit':
                 io.emit('zombieHit', data);
                 break;
             case 'zombieRespawn':
                 io.emit('zombieRespawn', data);
+                break;
+            case 'grenade':
+                io.emit('grenade', data);
+                break;
+            case 'left':
+                io.emit('left', data);
                 break;
             default:
                 console.error('Unknown message type:', messageType);
@@ -115,7 +125,7 @@ module.exports = function (io) {
                 if (playerUsernames.includes(gameState.players[playerId].username)) {
                     delete gameState.players[playerId];
                     console.log(`${playerUsernames} disconnected / test socket`);
-                    
+
                     break;
                 }
             }
@@ -139,10 +149,4 @@ function emitCurrentGameState(playerSocket) {
     };
 
     playerSocket.emit('currentGameState', gameStateData);
-}
-
-
-function emitEventToAllExcept(eventName, eventData, io) {
-
-    io.emit(eventName, eventData);
 }

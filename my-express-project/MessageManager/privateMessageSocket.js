@@ -23,7 +23,8 @@ module.exports = function(io) {
   
       socket.on('privateMessage', async (sender, receiver, message) => {
         try {
-            await pool.query('INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?)', [sender, receiver, message]);
+          const time = new Date();
+          await pool.query('INSERT INTO messages (sender, receiver, message, timestamp) VALUES (?, ?, ?, ?)', [sender, receiver, message, time]);
 
           if (connectedUsers[receiver]) {
 
@@ -40,7 +41,7 @@ module.exports = function(io) {
       });
   
       socket.on('disconnect', () => {
-        console.log('private message offline');
+        console.log('User offline');
       });
     });
   };
