@@ -111,7 +111,7 @@ module.exports = function (io) {
         });
 
         socket.on('close', () => {
-            console.log('Player disconnected:', playerId);
+            console.log('room tehran disconnected:', playerId);
             connectedSockets.delete(socket);
             delete gameState.players[playerId];
         });

@@ -6,7 +6,7 @@ module.exports = function(io) {
       });
       
       socket.on('disconnect', () => {
-        console.log('User disconnected');
+        console.log('Chat socket offline');
       });
     });
   };

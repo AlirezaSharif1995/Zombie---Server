@@ -44,10 +44,6 @@ function handlePlayer(data, socket, io) {
     }, io);
 }
 
-function handlePlayerShooting(data, socket) {
-
-}
-
 function handleZombieUpdate(data, socket, io) {
 
     const { ZombieId } = data;
@@ -56,17 +52,15 @@ function handleZombieUpdate(data, socket, io) {
 
         gameState.zombies[ZombieId].serverID = data.serverID;
         gameState.zombies[ZombieId].targetUsername = data.targetUsername;
-        gameState.zombies[ZombieId].health = data.health;
 
     } else {
 
         gameState.zombies[ZombieId] = {
             serverID: data.serverID,
             targetUsername: data.targetUsername,
-            health: data.health,
         };
     }
-    socket.broadcast.emit('zombieUpdate', gameState.zombies[ZombieId]);
+    socket.broadcast.emit('setZombieTarget', gameState.zombies[ZombieId]);
 }
 
 function handleMessage(message, socket, io) {
@@ -78,17 +72,14 @@ function handleMessage(message, socket, io) {
             case 'playerMove':
                 handlePlayer(data, socket, io);
                 break;
-            // case 'zombieUpdate':
-            //     handleZombieUpdate(data, socket, io);
-            //     break;
-            // case 'freeZombie':
-            //     io.emit('freeZombie', data);
-            //     break;
-            // case 'spawnZombie':
-            //     handleZombieUpdate(data, socket, io)
-            //     break;
             case 'setZombieTarget':
-                handleZombieUpdate(data, socket,io);
+                handleZombieUpdate(data, socket, io);
+                break;
+            case 'zombieHit':
+                io.emit('zombieHit', data);
+                break;
+            case 'zombieRespawn':
+                io.emit('zombieRespawn', data);
                 break;
             default:
                 console.error('Unknown message type:', messageType);
@@ -108,11 +99,11 @@ module.exports = function (io) {
             console.log('New player connected:', playerId);
             io.emit('playerJoined', Entry);
             emitCurrentGameState(socket);
-            console.log(gameState.zombies)
         });
 
         socket.on('message', (obj) => {
             handleMessage(obj, socket, io);
+
         });
 
         socket.on('disconnect', () => {
@@ -123,9 +114,8 @@ module.exports = function (io) {
 
                 if (playerUsernames.includes(gameState.players[playerId].username)) {
                     delete gameState.players[playerId];
-                    console.log('Player with username disconnected');
-                    console.log(gameState.players)
-                    emitCurrentGameState(io);
+                    console.log(`${playerUsernames} disconnected / test socket`);
+                    
                     break;
                 }
             }
@@ -147,7 +137,6 @@ function emitCurrentGameState(playerSocket) {
         players: playerUsernames,
         characterID: playerCharacterID
     };
-    console.log(gameStateData);
 
     playerSocket.emit('currentGameState', gameStateData);
 }

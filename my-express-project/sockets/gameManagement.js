@@ -133,7 +133,7 @@ module.exports = function (io) {
 
                 if (playerUsernames.includes(gameState.players[playerId].username)) {
                     delete gameState.players[playerId];
-                    console.log('Player with username disconnected');
+                    console.log(`Player with  offline`);
                     console.log(gameState.players)
                     emitCurrentGameState(io);
                     break;

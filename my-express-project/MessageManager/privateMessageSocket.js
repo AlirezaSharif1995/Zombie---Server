@@ -40,7 +40,7 @@ module.exports = function(io) {
       });
   
       socket.on('disconnect', () => {
-        console.log('User disconnected');
+        console.log('private message offline');
       });
     });
   };
