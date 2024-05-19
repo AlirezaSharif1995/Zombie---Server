@@ -18,7 +18,7 @@ module.exports = function(io) {
       socket.on('userConnected', (id) => {
         console.log(`${id} joined the chat`);
         connectedUsers[id] = socket.id;
-        io.emit('userJoined', `${id} joined the chat`);
+        io.broadcast.emit('userJoined', `${id} joined the chat`);
       });
   
       socket.on('privateMessage', async (sender, receiver, message) => {
@@ -43,7 +43,12 @@ module.exports = function(io) {
       });
   
       socket.on('disconnect', () => {
-        console.log('User offline');
+        const userId = Object.keys(connectedUsers).find(key => connectedUsers[key] === socket.id);
+        if (userId) {
+          delete connectedUsers[userId];
+          console.log(`${userId} went offline`);
+          io.broadcast.emit('userDisconnected', `${userId} left the chat`);
+        }
       });
     });
   };

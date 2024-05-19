@@ -17,7 +17,6 @@ async function getUserByID(token) {
     return rows[0];
 }
 
-// Get user endpoint
 router.get('/', async (req, res) => {
     const { token } = req.body;
 
@@ -39,7 +38,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Add friend endpoint
 router.post('/addFriend', async (req, res) => {
     const { token, friendID } = req.body;
 
@@ -81,7 +79,6 @@ router.post('/addFriend', async (req, res) => {
     }
 });
 
-// Reject friend endpoint
 router.post('/rejectFriend', async (req, res) => {
     const { token, friendID } = req.body;
 
@@ -108,7 +105,6 @@ router.post('/rejectFriend', async (req, res) => {
     }
 });
 
-// request endpoint
 router.post('/sendRequest',async(req,res)=>{
     const { token, friendID } = req.body;
 
@@ -142,11 +138,11 @@ router.post('/sendRequest',async(req,res)=>{
 
 router.get('/playerInfo',async(req,res)=>{
 
-    const {id} = req.body;
-    const [existingUser] = await pool.query('SELECT username FROM users WHERE id = ?', [id]);
+    const token = req.body.id;
+    const [existingUser] = await pool.query('SELECT username FROM users WHERE id = ?', [token]);
 
     const user = {
-        id: id,
+        token: token,
         username: existingUser[0].username
     };
 
@@ -157,11 +153,17 @@ router.post('/removeUser',async(req,res)=>{
 
     const {token,friendID} = req.body;
     const user = await getUserByID(token);
+    const friend = await getUserByID(friendID);
 
     try{
-    const updatedReceivedRequests = user.friendsList ? JSON.parse(user.friendsList) : [];
-    const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
-    await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), user.id]);
+
+    const friendslist = user.friendsList ? JSON.parse(user.friendsList) : [];
+    const updateFriendslist = friendslist.filter(request => request !== friendID);
+    await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updateFriendslist), user.id]);
+
+    const otherFriendslist = friend.friendsList ? JSON.parse(friend.friendsList) : [];
+    const updatedOtherFriendslist = otherFriendslist.filter(request => request !== token);
+    await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updatedOtherFriendslist), friend.id]);
 
     res.status(200).json({ message: 'Friend removed successfully' });
     

@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
 const mysql = require('mysql2/promise');
 
 
@@ -16,10 +15,10 @@ const pool = mysql.createPool({
 
 router.get('/',async (req,res)=>{
 
-    const userId = req.body.id;
+    const token = req.body.id;
 
     try {
-        const [messages] = await pool.query('SELECT * FROM messages WHERE sender = ? OR receiver = ?', [userId, userId]);
+        const [messages] = await pool.query('SELECT * FROM messages WHERE sender = ? OR receiver = ?', [token, token]);
         res.send(messages);
 
       } catch (error) {
