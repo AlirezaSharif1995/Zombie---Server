@@ -119,12 +119,14 @@ module.exports = function (io) {
         socket.on('disconnect', () => {
 
             const playerUsernames = Object.values(gameState.players).map(player => player.username);
+            username = Object.values(gameState.players).map(player => player.username);
 
             for (const playerId in gameState.players) {
 
                 if (playerUsernames.includes(gameState.players[playerId].username)) {
                     delete gameState.players[playerId];
                     console.log(`${playerUsernames} disconnected / test socket`);
+                    //io.emit('left', username);
 
                     break;
                 }

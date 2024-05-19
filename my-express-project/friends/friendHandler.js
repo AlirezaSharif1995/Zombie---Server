@@ -1,6 +1,5 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
-
 const router = express.Router();
 
 const pool = mysql.createPool({
@@ -13,15 +12,8 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Helper function to get user by id
 async function getUserByID(token) {
     const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [token]);
-    return rows[0];
-}
-
-// Helper function to get user by email
-async function getUserByEmail(email) {
-    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     return rows[0];
 }
 
@@ -37,14 +29,12 @@ router.get('/', async (req, res) => {
 
         const userData = {
             id: user.id,
-            email: user.email,
             recivedRequests: user.recivedRequests,
             friendsList: user.friendsList
         };
 
         res.status(200).json({ message: 'Data sent successfully', user: userData });
     } catch (error) {
-        console.error('Error fetching user:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -69,9 +59,7 @@ router.post('/addFriend', async (req, res) => {
         const updatedFriendsList = user.friendsList ? JSON.parse(user.friendsList) : [];
         const updateUserList = friend.friendList ? JSON.parse(friend.friendsList) : [];
 
-        // Check if the friendID already exists in the updatedFriendsList
         if (!updatedFriendsList.includes(friendID)) {
-            // Add friend's ID to the list of friends only if it's not already present
             updatedFriendsList.push(friendID);
             updateUserList.push(user.id);
 
@@ -79,14 +67,12 @@ router.post('/addFriend', async (req, res) => {
             return res.status(400).json({ error: 'Friend already exists in the list' });
         }
 
-        // Update user's friend list with the updated friendsList
         await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updatedFriendsList), token]);
         await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updateUserList),friendID]);
 
         const updatedReceivedRequests = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
         const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
         await pool.query('UPDATE users SET recivedRequests = ? WHERE id = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), token]);
-
 
         res.status(200).json({ message: 'Friend added successfully' });
     } catch (error) {
@@ -101,7 +87,6 @@ router.post('/rejectFriend', async (req, res) => {
 
     try {
 
-        // Check if the friend ID exists in the database
         const [[friend]] = await pool.query('SELECT * FROM users WHERE id = ?', [friendID]);
         if (!friend) {
             return res.status(404).json({ error: 'Friend not found' });

@@ -24,13 +24,15 @@ module.exports = function(io) {
       socket.on('privateMessage', async (sender, receiver, message) => {
         try {
           const time = new Date();
-          await pool.query('INSERT INTO messages (sender, receiver, message, timestamp) VALUES (?, ?, ?, ?)', [sender, receiver, message, time]);
+          const timer = `${time.getHours()} , ${time.getMinutes()} , ${time.getDate()} , ${time.getMonth() +1 } , ${time.getFullYear()}`;
+
+          await pool.query('INSERT INTO messages (sender, receiver, message, timestamp) VALUES (?, ?, ?, ?)', [sender, receiver, message, timer]);
 
           if (connectedUsers[receiver]) {
 
-            console.log(`${sender} to ${receiver} : ${message}`);
+            console.log(`${sender} to ${receiver} : ${message} : ${timer}`);
 
-            io.to(connectedUsers[receiver]).emit('privateMessage', `${sender} : ${message}`);
+            io.to(connectedUsers[receiver]).emit('privateMessage', `${sender} , ${message} , ${timer}`);
 
           } else {
             console.log('Receiver is not online');

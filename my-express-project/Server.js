@@ -6,7 +6,7 @@ const friendHandler = require('./friends/friendHandler');
 const friendsChat = require('./friends/friendsChat');
 const http = require('http');
 const socketIo = require('socket.io');
-const { setupChatSocket, setupPrivateMessageSocket, voiceChatSocket, gameManagement } = require('./MessageManager');
+const { setupChatSocket, setupPrivateMessageSocket, voiceChatSocket } = require('./MessageManager');
 const socketGateway = require('./sockets/socketGateway');
 const testSocket = require('./sockets/testSocket');
 
