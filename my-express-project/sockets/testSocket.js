@@ -96,7 +96,7 @@ async function handleMessage(message, socket, io) {
                 io.emit('zombieRespawn', data);
                 break;
             case 'grenade':
-                io.emit('grenade', data);
+                socket.broadcast.emit('grenade', data);
                 break;
             case 'left':
                 io.emit('left', data);
