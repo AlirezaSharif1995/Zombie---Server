@@ -66,7 +66,7 @@ router.post('/addFriend', async (req, res) => {
         }
 
         await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updatedFriendsList), token]);
-        await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updateUserList),friendID]);
+        await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updateUserList), friendID]);
 
         const updatedReceivedRequests = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
         const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
@@ -93,7 +93,7 @@ router.post('/rejectFriend', async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        
+
         const updatedReceivedRequests = user.recivedRequests ? JSON.parse(user.recivedRequests) : [];
         const updatedReceivedRequestsWithoutFriend = updatedReceivedRequests.filter(request => request !== friendID);
         await pool.query('UPDATE users SET recivedRequests = ? WHERE id = ?', [JSON.stringify(updatedReceivedRequestsWithoutFriend), token]);
@@ -105,15 +105,15 @@ router.post('/rejectFriend', async (req, res) => {
     }
 });
 
-router.post('/sendRequest',async(req,res)=>{
+router.post('/sendRequest', async (req, res) => {
     const { token, friendID } = req.body;
 
- try {
+    try {
 
-    const firstuser = await getUserByID(token);
-    if (!firstuser) {
-        return res.status(404).json({ error: 'User not found' });
-    }
+        const firstuser = await getUserByID(token);
+        if (!firstuser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
         const user = await getUserByID(friendID);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -136,7 +136,7 @@ router.post('/sendRequest',async(req,res)=>{
     }
 });
 
-router.get('/playerInfo',async(req,res)=>{
+router.get('/playerInfo', async (req, res) => {
 
     const token = req.body.id;
     const [existingUser] = await pool.query('SELECT username FROM users WHERE id = ?', [token]);
@@ -146,33 +146,33 @@ router.get('/playerInfo',async(req,res)=>{
         username: existingUser[0].username
     };
 
-    res.status(200).json({ message: 'user found: ',user});
+    res.status(200).json({ message: 'user found: ', user });
 });
 
-router.post('/removeUser',async(req,res)=>{
+router.post('/removeUser', async (req, res) => {
 
-    const {token,friendID} = req.body;
+    const { token, friendID } = req.body;
     const user = await getUserByID(token);
     const friend = await getUserByID(friendID);
+    console.log(req.body);
+    try {
 
-    try{
+        const friendslist = user.friendsList ? JSON.parse(user.friendsList) : [];
+        const updateFriendslist = friendslist.filter(request => request !== friendID);
+        await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updateFriendslist), user.id]);
 
-    const friendslist = user.friendsList ? JSON.parse(user.friendsList) : [];
-    const updateFriendslist = friendslist.filter(request => request !== friendID);
-    await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updateFriendslist), user.id]);
+        const otherFriendslist = friend.friendsList ? JSON.parse(friend.friendsList) : [];
+        const updatedOtherFriendslist = otherFriendslist.filter(request => request !== token);
+        await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updatedOtherFriendslist), friend.id]);
 
-    const otherFriendslist = friend.friendsList ? JSON.parse(friend.friendsList) : [];
-    const updatedOtherFriendslist = otherFriendslist.filter(request => request !== token);
-    await pool.query('UPDATE users SET friendsList = ? WHERE id = ?', [JSON.stringify(updatedOtherFriendslist), friend.id]);
+        res.status(200).json({ message: 'Friend removed successfully' });
 
-    res.status(200).json({ message: 'Friend removed successfully' });
-    
-    }catch (error) {
+    } catch (error) {
         console.error('Error remove friend:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 
-    
+
 });
 
 module.exports = router;

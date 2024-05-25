@@ -1,9 +1,19 @@
+const mysql = require('mysql2/promise');
 
 let gameState = {
     players: {},
     zombies: {}
 }
 
+const pool = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: 'Alireza1995!',
+    database: 'zombie-City-database',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
 function handlePlayer(data, socket) {
 
@@ -67,7 +77,7 @@ function handleZombieUpdate(data, socket) {
     socket.broadcast.emit('setZombieTarget', gameState.zombies[ZombieId]);
 }
 
-function handleMessage(message, socket, io) {
+async function handleMessage(message, socket, io) {
     try {
         const data = (message);
         const messageType = data.type;
@@ -91,6 +101,27 @@ function handleMessage(message, socket, io) {
             case 'left':
                 io.emit('left', data);
                 break;
+            case 'coin':
+                const username = data.username;
+                const coin = data.coin;
+                const [existingUser] = await pool.query('SELECT coin FROM users WHERE username = ?', username);
+
+                try {
+                    const user = {
+                        coin: existingUser[0].coin
+                    }
+                    if (coin == 0) {
+                        socket.emit('coin', user);
+                    } else {
+                        updatedCoin = existingUser[0].coin + coin;
+                        console.log(username)
+                        await pool.query('UPDATE users SET coin = ? WHERE username = ?', [updatedCoin, username]);
+                        console.log(username,existingUser)
+                    }
+                } catch (error) {
+
+                }
+                break
             default:
                 console.error('Unknown message type:', messageType);
         }

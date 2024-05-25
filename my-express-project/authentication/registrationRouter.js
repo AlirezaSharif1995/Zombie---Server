@@ -13,8 +13,8 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-router.post('/', async (req, res) => {
-    const { email, password, location, username } = req.body;
+router.post('/validator', async (req, res) => {
+    const { email, password } = req.body;
 
     if (!isValidEmail(email)) {
         return res.status(400).json({ error: 'Invalid email format' });
@@ -28,9 +28,23 @@ router.post('/', async (req, res) => {
 
         const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
 
+        console.log(email);
         if (existingUser.length > 0) {
             return res.status(400).json({ error: 'Email is already registered' });
         }
+
+
+        res.status(201).json({ message: 'validation succesfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/', async (req, res) => {
+    const { email, password, location, username } = req.body;
+
+
+    try {
 
         const [existingUser2] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
 
@@ -42,7 +56,8 @@ router.post('/', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const token = generateRandomToken();
-    
+        console.log(token);
+
         await pool.query('INSERT INTO users (id, email, password_hash, location, username) VALUES (?, ?, ?, ?, ?)', [token, email, hashedPassword, location, username]);
 
         res.status(201).json({ message: 'User registered successfully', token });
@@ -50,6 +65,7 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 function isValidEmail(email) {
 
