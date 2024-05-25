@@ -118,7 +118,6 @@ router.post('/sendRequest', async (req, res) => {
         if (!user[0].username) {
             return res.status(404).json({ error: 'User not found' });
         }
-        console.log(user[0].friendsList);
         if (user[0].friendsList.includes(token)) {
             return res.status(404).json({ error: 'Friend is already exist' });
         }
