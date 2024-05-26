@@ -18,7 +18,7 @@ module.exports = function(io) {
       socket.on('userConnected', (id) => {
         console.log(`${id} joined the chat`);
         connectedUsers[id] = socket.id;
-        io.broadcast.emit(`userJoined ${id} joined the chat`);
+        socket.broadcast.emit(`userJoined ${id} joined the chat`);
       });
   
       socket.on('privateMessage', async (sender, receiver, message) => {
@@ -47,7 +47,7 @@ module.exports = function(io) {
         if (userId) {
           delete connectedUsers[userId];
           console.log(`${userId} went offline`);
-          io.broadcast.emit('userDisconnected', `${userId} left the chat`);
+          socket.broadcast.emit(`userDisconnected ${userId} left the chat`);
         }
       });
     });
