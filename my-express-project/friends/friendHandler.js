@@ -52,11 +52,15 @@ router.post('/addFriend', async (req, res) => {
         if (!friend) {
             return res.status(404).json({ error: 'User not found' });
         }
+    
 
         // Parse existing friendsList if not null
-        const updatedFriendsList = user.friendsList ? JSON.parse(user.friendsList) : [];
-        const updateUserList = friend.friendList ? JSON.parse(friend.friendsList) : [];
+        const updatedFriendsList = JSON.parse(user.friendsList);
+        const updateUserList = JSON.parse(friend.friendsList);
 
+        console.log(friend.friendsList)
+        console.log(updateUserList)
+        
         if (!updatedFriendsList.includes(friendID)) {
             updatedFriendsList.push(friendID);
             updateUserList.push(user.id);
@@ -106,29 +110,29 @@ router.post('/rejectFriend', async (req, res) => {
 });
 
 router.post('/sendRequest', async (req, res) => {
-    const { token, friendUsername } = req.body;
+    const { token, username } = req.body;
 
     try {
-
         const firstuser = await getUserByID(token);
         if (!firstuser) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const [user] = await pool.query('SELECT * FROM users WHERE username = ?', [friendUsername]);
-        if (!user[0].username) {
+
+        const [user] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+        if (!user[0]) {
             return res.status(404).json({ error: 'User not found' });
         }
+
         if (user[0].friendsList.includes(token)) {
             return res.status(404).json({ error: 'Friend is already exist' });
         }
-
         const updatedFriendsRequest = user[0].recivedRequests ? JSON.parse(user[0].recivedRequests) : [];
         if (!updatedFriendsRequest.includes(token)) {
             updatedFriendsRequest.push(firstuser.id);
         } else {
             return res.status(400).json({ error: 'Friend request already sent' });
         }
-        await pool.query('UPDATE users SET recivedRequests = ? WHERE username = ?', [JSON.stringify(updatedFriendsRequest), friendUsername]);
+        await pool.query('UPDATE users SET recivedRequests = ? WHERE username = ?', [JSON.stringify(updatedFriendsRequest), username]);
 
         res.status(200).json({ message: 'Friend request sent successfully' });
     } catch (error) {

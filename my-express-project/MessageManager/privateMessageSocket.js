@@ -28,15 +28,16 @@ module.exports = function(io) {
 
           await pool.query('INSERT INTO messages (sender, receiver, message, timestamp) VALUES (?, ?, ?, ?)', [sender, receiver, message, timer]);
 
-          if (connectedUsers[receiver]) {
+          //if (connectedUsers[receiver]) {
 
             console.log(`${sender} to ${receiver} : ${message} : ${timer}`);
 
             io.to(connectedUsers[receiver]).emit('privateMessage', `${sender} , ${message} , ${timer}`);
 
-          } else {
-            console.log('Receiver is not online');
-          }
+          // } 
+          // {
+          //   console.log('Receiver is not online');
+          // }
         } catch (error) {
           console.error('Error sending private message:', error);
         }

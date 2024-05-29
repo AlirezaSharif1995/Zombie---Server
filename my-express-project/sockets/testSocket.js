@@ -116,7 +116,7 @@ async function handleMessage(message, socket, io) {
                         updatedCoin = existingUser[0].coin + coin;
                         console.log(username)
                         await pool.query('UPDATE users SET coin = ? WHERE username = ?', [updatedCoin, username]);
-                        console.log(username,existingUser)
+                        console.log(username, existingUser)
                     }
                 } catch (error) {
 
@@ -168,10 +168,11 @@ module.exports = function (io) {
 }
 
 function emitCurrentGameState(playerSocket) {
-
+    console.log("enter");
     if (Object.keys(gameState.players).length === 0) {
         return;
     }
+    console.log("enter 2");
 
     const playerUsernames = Object.values(gameState.players).map(player => player.username);
     const playerCharacterID = Object.values(gameState.players).map(player => player.characterID);

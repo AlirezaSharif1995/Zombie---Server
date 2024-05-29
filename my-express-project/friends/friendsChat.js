@@ -16,10 +16,42 @@ const pool = mysql.createPool({
 router.get('/', async (req, res) => {
 
   const { token } = req.body;
-
+console.log("ok");
   try {
     const [messages] = await pool.query('SELECT * FROM messages WHERE sender = ? OR receiver = ?', [token, token]);
     res.send(messages);
+
+  } catch (error) {
+    console.error('Error retrieving messages:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+router.get('/getMessageUsers', async (req, res) => {
+
+  const { token } = req.body;
+
+  try {
+    // SQL query to get distinct sender and receiver IDs except the self user
+    const query = `
+      SELECT DISTINCT id 
+      FROM (
+        SELECT sender AS id 
+        FROM messages 
+        WHERE receiver = ? AND sender != ?
+        UNION
+        SELECT receiver AS id 
+        FROM messages 
+        WHERE sender = ? AND receiver != ?
+      ) AS ids
+    `;
+
+    const [results] = await pool.query(query, [token, token, token, token]);
+
+    // Extract IDs from results
+    const userIds = results.map(row => row.id);
+
+    res.send(userIds);
 
   } catch (error) {
     console.error('Error retrieving messages:', error);
