@@ -143,7 +143,9 @@ router.post('/sendRequest', async (req, res) => {
 
 router.get('/playerInfo', async (req, res) => {
 
-    const token = req.body.id;
+    try {
+        
+    const {token} = req.body;
     const [existingUser] = await pool.query('SELECT username FROM users WHERE id = ?', [token]);
 
     const user = {
@@ -152,6 +154,11 @@ router.get('/playerInfo', async (req, res) => {
     };
 
     res.status(200).json({ message: 'user found: ', user });
+    } catch (error) {
+        console.error('Error remove friend:', error);
+        res.status(500).json({ error: 'Internal server error' });
+        
+    }
 });
 
 router.post('/removeUser', async (req, res) => {
