@@ -51,10 +51,10 @@ router.post('/loginWithEmail', async (req, res) => {
         if (!match) {
             return res.status(404).json({ error: 'Password is incorect' });
         }
-
         const user = {
             token: existingUser[0].id
         };
+        console.log(user);
 
         res.status(200).json({ message: 'Login successful', user });
     } catch (error) {
@@ -65,7 +65,7 @@ router.post('/loginWithEmail', async (req, res) => {
 
 router.post('/changeStat', async (req, res) => {
 
-    const { token, type, value } = req.body;
+    const { token, type, value, valueString } = req.body;
     try {
 
         const allowedTypes = ['location', 'characterId', 'weaponId', 'coin', 'grenade', 'armor', 'username'];
@@ -75,13 +75,17 @@ router.post('/changeStat', async (req, res) => {
         }
 
         if (type == 'username') {
+            console.log(type)
+            console.log(valueString)
 
-            const [existingUser] = await pool.query('SELECT * FROM users WHERE username = ?', [value]);
+            const [existingUser] = await pool.query('SELECT * FROM users WHERE username = ?', valueString);
 
             if (existingUser.length > 0) {
                 return res.status(400).json({ error: 'Username is already registered' });
             }
-
+            const query = `UPDATE users SET ${type} = ? WHERE id = ?`;
+            await pool.query(query, [valueString, token]);
+            return res.status(200).json({ message: 'username changed successfully' });
         }
 
         const query = `UPDATE users SET ${type} = ? WHERE id = ?`;

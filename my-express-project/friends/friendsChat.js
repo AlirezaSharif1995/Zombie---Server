@@ -16,7 +16,6 @@ const pool = mysql.createPool({
 router.get('/', async (req, res) => {
 
   const { token } = req.body;
-console.log("ok");
   try {
     const [messages] = await pool.query('SELECT * FROM messages WHERE sender = ? OR receiver = ?', [token, token]);
     res.send(messages);

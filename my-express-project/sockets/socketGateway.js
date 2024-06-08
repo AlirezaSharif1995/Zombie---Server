@@ -19,8 +19,8 @@ router.get('/', async (req,res)=>{
     const { location } = req.body;
 
     try {
-    const [availableRooms] = await pool.query('SELECT socketPort FROM roomSockets WHERE location = ?', location);
-
+    const [availableRooms] = await pool.query('SELECT socketPort, playersCount FROM roomSockets WHERE location = ? AND playersCount < 30 LIMIT 1', location);
+    
     if (availableRooms.length > 0) {
         const socketPorts = availableRooms.map(room => room.socketPort);
         console.log('Socket ports for rooms with the same location:', socketPorts);
