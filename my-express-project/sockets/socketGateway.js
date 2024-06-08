@@ -16,16 +16,15 @@ const pool = mysql.createPool({
 
 router.get('/', async (req,res)=>{
 
-    const { token } = req.body;
+    const { location } = req.body;
 
     try {
-    const [user] = await pool.query('SELECT location FROM users WHERE id = ?', token);
-    const [availableRooms] = await pool.query('SELECT socketPort FROM roomSockets WHERE location = ?', user[0].location);
+    const [availableRooms] = await pool.query('SELECT socketPort FROM roomSockets WHERE location = ?', location);
 
     if (availableRooms.length > 0) {
         const socketPorts = availableRooms.map(room => room.socketPort);
         console.log('Socket ports for rooms with the same location:', socketPorts);
-        res.json({ socketPorts }); // Sending the socket ports as a response
+        res.json({ socketPorts }); 
     } else {
         console.log('No rooms found with the same location');
         res.json({ message: 'No rooms found with the same location' });
@@ -35,7 +34,6 @@ router.get('/', async (req,res)=>{
         console.error('Error finding user:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
-
 
 });
 

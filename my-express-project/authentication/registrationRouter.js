@@ -15,17 +15,16 @@ const pool = mysql.createPool({
 
 router.post('/validator', async (req, res) => {
     const { email, password } = req.body;
-
-    if (!isValidEmail(email)) {
-        return res.status(400).json({ error: 'Invalid email format' });
-    }
-
-    if (!isValidPassword(password)) {
-        return res.status(400).json({ error: 'Password must be at least 8 characters long' });
-    }
-
+    
     try {
 
+        if (!isValidEmail(email)) {
+            return res.status(400).json({ error: 'Invalid email format' });
+        }
+
+        if (!isValidPassword(password)) {
+            return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+        }
         const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
 
         console.log(email);
@@ -43,8 +42,11 @@ router.post('/validator', async (req, res) => {
 router.post('/', async (req, res) => {
     const { email, password, location, username } = req.body;
 
-
     try {
+
+        if (!isValidUsername(username)) {
+            return res.status(400).json({ error: 'username must be at least 10 characters long' });
+        }
 
         const [existingUser2] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
 
@@ -56,7 +58,6 @@ router.post('/', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const token = generateRandomToken();
-        console.log(token);
 
         await pool.query('INSERT INTO users (id, email, password_hash, location, username) VALUES (?, ?, ?, ?, ?)', [token, email, hashedPassword, location, username]);
 
@@ -66,7 +67,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-
 function isValidEmail(email) {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -75,6 +75,10 @@ function isValidEmail(email) {
 
 function isValidPassword(password) {
     return password.length >= 8;
+}
+
+function isValidUsername(username) {
+    return username.length <= 10;
 }
 
 function generateRandomToken() {

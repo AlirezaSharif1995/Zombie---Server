@@ -145,11 +145,11 @@ router.get('/playerInfo', async (req, res) => {
 
     try {
         
-    const {token} = req.body;
-    const [existingUser] = await pool.query('SELECT username FROM users WHERE id = ?', [token]);
+    const {id} = req.body;
+    const [existingUser] = await pool.query('SELECT username FROM users WHERE id = ?', [id]);
 
     const user = {
-        token: token,
+        token: id,
         username: existingUser[0].username
     };
 
