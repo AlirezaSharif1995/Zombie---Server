@@ -1,15 +1,47 @@
   module.exports = function(io) {
     io.on('connection', (socket) => {
-      console.log('A user connected');
+      connectedUsers[username] = socket.username;
   
-      socket.on('start_chat', (audioBytes) => {
-          // Handle the incoming audio bytes
-          console.log('Received audio data');
-          console.log(audioBytes)
-  
-          // Broadcast the audio data to other clients
-          io.emit('audio_data', audioBytes);
-          // socket.broadcast.emit('audio_data', audioBytes);
+      socket.on('call',(fromName,toName)=>{
+
+        try {
+          io.to(connectedUsers[toName]).emit('call',fromName);
+          console.log(`${fromName} calling to ${toName} ...`);
+        } catch (error) {
+          console.log(error);
+        }
+
       });
+
+      socket.on('friendJoin',(fromName)=>{
+
+        try {
+          io.to(connectedUsers[fromName]).emit('friendJoin',fromName);
+          console.log(`${fromName} joined call`);          
+        } catch (error) {
+          console.log(error);
+        }
+
+      });
+
+      socket.on('friendLeft', (fromName) =>{
+
+        try {
+          io.to(connectedUsers[fromName]).emit('friendLeft',fromName);
+          console.log(`${fromName} left call`);          
+        } catch (error) {
+          console.log(error);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        const userId = Object.keys(connectedUsers).find(key => connectedUsers[key] === socket.username);
+        if (userId) {
+          delete connectedUsers[userId];
+          console.log(`${userId} went offline`);
+          socket.broadcast.emit(`userDisconnected ${userId} left the chat`);
+        }
+      });
+
     });
   };
