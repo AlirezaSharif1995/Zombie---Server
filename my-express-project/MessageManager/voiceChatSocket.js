@@ -1,74 +1,63 @@
 const mysql = require('mysql2/promise');
 const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: 'Alireza1995!',
-    database: 'zombie-City-database',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+  host: 'localhost',
+  user: 'root',
+  password: 'Alireza1995!',
+  database: 'zombie-City-database',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
-  
-  module.exports = function(io) {
-    io.on('connection', (socket) => {
-      connectedUsers[username] = socket.username;
-  
-      socket.on('call',async (fromName,toName)=>{
 
-        try {
-          io.to(connectedUsers[toName]).emit('call',fromName);
-          console.log(`${fromName} calling to ${toName} ...`);
+module.exports = function (io) {
 
-          const time = new Date();
-          const timer = `${time.getHours()} , ${time.getMinutes()} , ${time.getDate()} , ${time.getMonth() +1 } , ${time.getFullYear()}`;
-          const randomToken = generateRandomToken();
+  io.on('connection', (socket) => {
 
-          await pool.query('INSERT INTO callLog (Id, sender, receiver, date) VALUES (?, ?, ?, ?)', [randomToken, fromName, toName, timer]);
+    socket.on('call', async (Data) => {
 
-        } catch (error) {
-          console.log(error);
-        }
+      try {
+        io.emit('call', Data);
+        console.log("call", Data);
+        //const time = new Date();
+        //const timer = `${time.getHours()} , ${time.getMinutes()} , ${time.getDate()} , ${time.getMonth() + 1} , ${time.getFullYear()}`;
+        //const randomToken = generateRandomToken();
 
-      });
+        //await pool.query('INSERT INTO callLog (Id, sender, receiver, date) VALUES (?, ?, ?, ?)', [randomToken, fromName, toName, timer]);
 
-      socket.on('friendJoin',(fromName)=>{
-
-        try {
-          io.to(connectedUsers[fromName]).emit('friendJoin',fromName);
-          console.log(`${fromName} joined call`);          
-        } catch (error) {
-          console.log(error);
-        }
-
-      });
-
-      socket.on('friendLeft', (fromName) =>{
-
-        try {
-          io.to(connectedUsers[fromName]).emit('friendLeft',fromName);
-          console.log(`${fromName} left call`);          
-        } catch (error) {
-          console.log(error);
-        }
-      });
-
-      socket.on('disconnect', () => {
-        const userId = Object.keys(connectedUsers).find(key => connectedUsers[key] === socket.username);
-        if (userId) {
-          delete connectedUsers[userId];
-          console.log(`${userId} went offline`);
-          socket.broadcast.emit(`userDisconnected ${userId} left the chat`);
-        }
-      });
+      } catch (error) {
+        console.log(error);
+      }
 
     });
 
-  };
+    socket.on('friendJoin', async (Data) => {
 
-  function generateRandomToken() {
-    let token = '';
-    for (let i = 0; i < 5; i++) {
-        token += Math.floor(Math.random() * 10); // Generate random digit (0-9)
-    }
-    return token;
+      try {
+        io.emit('friendJoin', Data);
+        console.log("friendJoin", Data);
+      } catch (error) {
+        console.log(error);
+      }
+
+    });
+
+    socket.on('friendLeft', async (Data) => {
+
+      try {
+        io.emit('friendLeft', Data);
+        console.log("friendLeft", Data);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+  });
+
+};
+
+function generateRandomToken() {
+  let token = '';
+  for (let i = 0; i < 5; i++) {
+    token += Math.floor(Math.random() * 10); // Generate random digit (0-9)
+  }
+  return token;
 }

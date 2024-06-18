@@ -5,7 +5,7 @@ const socketIo = require('socket.io');
 
 const { registrationRouter, loginRouter } = require('./authentication');
 const { friendHandler, friendsChat } = require('./friends');
-const { setupPrivateMessageSocket, voiceChatSocket } = require('./MessageManager');
+const { setupPrivateMessageSocket, voiceChatSocket, chatRequest } = require('./MessageManager');
 const socketGateway = require('./sockets/socketGateway');
 const testSocket = require('./sockets/testSocket');
 
@@ -18,6 +18,7 @@ app.use('/auth/login', loginRouter);
 app.use('/friendHandler', friendHandler);
 app.use('/friendsChat', friendsChat);
 app.use('/socketGateway', socketGateway);
+app.use('/chatRequest', chatRequest);
 
 const server = http.createServer(app);
 const io = socketIo(server);

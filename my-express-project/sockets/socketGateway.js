@@ -23,7 +23,6 @@ router.get('/', async (req,res)=>{
     
     if (availableRooms.length > 0) {
         const socketPorts = availableRooms.map(room => room.socketPort);
-        console.log('Socket ports for rooms with the same location:', socketPorts);
         res.json({ socketPorts }); 
     } else {
         console.log('No rooms found with the same location');

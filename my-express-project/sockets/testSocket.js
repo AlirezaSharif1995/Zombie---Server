@@ -28,6 +28,7 @@ function handlePlayer(data, socket) {
         gameState.players[playerId].weaponCode = data.weaponCode;
         gameState.players[playerId].animationCode = data.animationCode;
         gameState.players[playerId].health = data.health;
+        gameState.players[playerId].emojiCode = data.emojiCode;
 
     } else {
 
@@ -41,6 +42,7 @@ function handlePlayer(data, socket) {
             rotY: data.rotY,
             animationCode: data.animationCode,
             health: data.health,
+            emojiCode: data.emojiCode
         };
     }
 
@@ -54,7 +56,8 @@ function handlePlayer(data, socket) {
         rotZ: data.rotZ,
         weaponCode: data.weaponCode,
         animationCode: data.animationCode,
-        health: data.health
+        health: data.health,
+        emojiCode: data.emojiCode
     });
 }
 
@@ -168,11 +171,11 @@ module.exports = function (io) {
 }
 
 function emitCurrentGameState(playerSocket) {
-    console.log("enter");
+    
     if (Object.keys(gameState.players).length === 0) {
         return;
     }
-    console.log("enter 2");
+
 
     const playerUsernames = Object.values(gameState.players).map(player => player.username);
     const playerCharacterID = Object.values(gameState.players).map(player => player.characterID);
