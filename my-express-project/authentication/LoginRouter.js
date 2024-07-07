@@ -68,7 +68,7 @@ router.post('/changeStat', async (req, res) => {
     const { token, type, value, valueString } = req.body;
     try {
 
-        const allowedTypes = ['location', 'characterId', 'weaponId', 'coin', 'grenade', 'armor', 'username'];
+        const allowedTypes = ['location', 'characterId', 'weaponId', 'coin', 'grenade', 'armor', 'username', 'premium'];
 
         if (!allowedTypes.includes(type)) {
             return res.status(400).json({ error: 'Invalid stat type' });
@@ -96,6 +96,30 @@ router.post('/changeStat', async (req, res) => {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+router.post('/premium',async(req,res)=>{
+    const { token } = req.body;
+
+    try {
+
+        const [existingUser] = await pool.query('SELECT * FROM users WHERE id = ?', [token]);
+
+        if (existingUser.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const user = {
+            premium: existingUser[0].premium
+        };
+
+        res.status(200).json({ user });
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+
 });
 
 module.exports = router;

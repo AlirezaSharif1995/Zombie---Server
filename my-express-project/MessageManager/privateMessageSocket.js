@@ -47,7 +47,7 @@ module.exports = function (io) {
         const time = new Date();
         const timer = `${time.getHours()} , ${time.getMinutes()} , ${time.getDate()} , ${time.getMonth() + 1} , ${time.getFullYear()}`;
 
-        await pool.query('INSERT INTO messages (sender, receiver, message, timestamp) VALUES (?, ?, ?, ?)', [[secondUserId].id, [userId].id, "Hi", timer]);
+        await pool.query('INSERT INTO messages (sender, receiver, message, timestamp) VALUES (?, ?, ?, ?)', [secondUserId[0].id, userId[0].id, "Hi", timer]);
 
         io.emit('messageRequest', obj);
 
@@ -56,7 +56,7 @@ module.exports = function (io) {
       }
     });
 
-    socket.on('messageAlarm', async (obj) => {
+    socket.on('messageAlarm', (obj) => {
 
       try {
 
