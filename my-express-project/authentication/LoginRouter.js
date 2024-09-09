@@ -18,9 +18,9 @@ router.post('/', async (req, res) => {
     console.log(`${token} is logged in`);
 
     try {
+        console.log(req.body)
 
         const [existingUser] = await pool.query('SELECT * FROM users WHERE id = ?', [token]);
-
         if (existingUser.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -31,6 +31,7 @@ router.post('/', async (req, res) => {
 
         res.status(200).json({ message: 'Login successful', user });
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: 'Internal server error' });
     }
 });
