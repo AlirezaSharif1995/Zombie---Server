@@ -22,6 +22,11 @@ app.use('/socketGateway', socketGateway);
 app.use('/chatRequest', chatRequest);
 app.use('/buyInfo', buyInfo);
 
+app.get('/',(req,res)=>{
+  console.log('connected');
+  res.send("connected");
+});
+
 const server = http.createServer(app);
 const io = socketIo(server);
 
@@ -29,6 +34,7 @@ setupPrivateMessageSocket(io);
 voiceChatSocket(io);
 testSocket(io);
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
 });
+

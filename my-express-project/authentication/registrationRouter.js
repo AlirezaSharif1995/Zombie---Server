@@ -84,9 +84,10 @@ function isValidUsername(username) {
 function generateRandomToken() {
     let token = '';
     for (let i = 0; i < 5; i++) {
-        token += Math.floor(Math.random() * 10); // Generate random digit (0-9)
+        token += Math.floor(Math.random() * 9) + 1; // Generate random digit (1-9)
     }
     return token;
 }
+
 
 module.exports = router;
