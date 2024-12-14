@@ -4,7 +4,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 
 const app = express();
-const PORT = 5000;
+const PORT = 4000;
 
 app.use(bodyParser.json());
 

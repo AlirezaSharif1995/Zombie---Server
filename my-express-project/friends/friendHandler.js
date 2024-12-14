@@ -39,8 +39,9 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/addFriend', async (req, res) => {
-    const { token, friendID } = req.body;
+    console.log(req.body);
 
+    const { token, friendID } = req.body;
     try {
 
         const user = await getUserByID(token);
@@ -111,7 +112,7 @@ router.post('/rejectFriend', async (req, res) => {
 
 router.post('/sendRequest', async (req, res) => {
     const { token, username } = req.body;
-
+console.log(req.body)
     try {
         const firstuser = await getUserByID(token);
         if (!firstuser) {

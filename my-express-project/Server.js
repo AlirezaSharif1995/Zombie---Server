@@ -11,7 +11,7 @@ const socketGateway = require('./sockets/socketGateway');
 const testSocket = require('./sockets/testSocket');
 
 const app = express();
-const PORT = 3030;
+const PORT = 3000;
 
 app.use(bodyParser.json());
 app.use('/auth/register', registrationRouter);
