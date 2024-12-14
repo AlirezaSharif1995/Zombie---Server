@@ -17,7 +17,7 @@
     "moongoose": "^0.0.5",
     "mysql2": "^3.9.6",
     "node-media-server": "^2.6.6",
-    "nodemon": "^3.1.0",
+    "nodemon": "^3.1.9",
     "socket.io": "^4.7.5",
     "wrtc": "^0.4.7"
   }
