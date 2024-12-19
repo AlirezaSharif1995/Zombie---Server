@@ -54,6 +54,12 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'Username is already registered' });
         }
 
+        const [existingUser3] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+
+        if (existingUser3.length > 0) {
+            return res.status(400).json({ error: 'email is already registered' });
+        }
+
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -63,6 +69,7 @@ router.post('/', async (req, res) => {
 
         res.status(201).json({ message: 'User registered successfully', token });
     } catch (error) {
+        console.log(error)
         res.status(500).json({ error: 'Internal server error' });
     }
 });
